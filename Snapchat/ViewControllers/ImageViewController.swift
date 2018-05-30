@@ -17,16 +17,19 @@ class ImageViewController: UIViewController, UIImagePickerControllerDelegate, UI
     @IBOutlet weak var elegirContactoButton: UIButton!
     
     var imagenPicker = UIImagePickerController()
+    var imagenID = NSUUID().uuidString
     
     override func viewDidLoad() {
         super.viewDidLoad()
         imagenPicker.delegate = self
+        elegirContactoButton.isEnabled = false
     }
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
         let image = info[UIImagePickerControllerOriginalImage] as! UIImage
         imageView.image = image
         imageView.backgroundColor = UIColor.clear
+        elegirContactoButton.isEnabled = true
         imagenPicker.dismiss(animated: true, completion: nil)
     }
     
@@ -41,16 +44,21 @@ class ImageViewController: UIViewController, UIImagePickerControllerDelegate, UI
         let imageFolder = Storage.storage().reference().child("imagenes")
         let imagenData = UIImagePNGRepresentation(imageView.image!)!
         
-        imageFolder.child("\(NSUUID().uuidString).jpg").putData(imagenData, metadata: nil, completion: {(medatada,error)in
+        imageFolder.child("\(imagenID).jpg").putData(imagenData, metadata: nil, completion: {(medatada,error)in
             print("Intentando subir imagen")
             if error != nil {
                 print("Ocurrio un error: \(error)")
+            }else{
+                self.performSegue(withIdentifier: "seleccionarContactoSegue", sender: medatada?.downloadURL()!.absoluteString)
             }
         })
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        
+        let siguienteVC = segue.destination as! ElegirUsuarioViewController
+        siguienteVC.imagenURL = sender as! String
+        siguienteVC.descrip = descripcionTextField.text!
+        siguienteVC.imagenID = imagenID
     }
     
 }
